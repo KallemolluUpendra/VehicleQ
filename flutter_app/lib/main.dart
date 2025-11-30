@@ -5,6 +5,7 @@ import 'providers/vehicle_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
+import 'utils/custom_page_transitions.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,17 +26,27 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
           useMaterial3: true,
+          // Apply custom left/right slide transitions for route changes.
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: CustomPageTransitionsBuilder(),
+              TargetPlatform.iOS: CustomPageTransitionsBuilder(),
+              TargetPlatform.windows: CustomPageTransitionsBuilder(),
+              TargetPlatform.linux: CustomPageTransitionsBuilder(),
+              TargetPlatform.macOS: CustomPageTransitionsBuilder(),
+            },
+          ),
         ),
         debugShowCheckedModeBanner: false,
         home: Consumer<AuthProvider>(
           builder: (context, authProvider, _) {
-            return authProvider.isLoggedIn ? HomeScreen() : LoginScreen();
+            return authProvider.isLoggedIn ? const HomeScreen() : const LoginScreen();
           },
         ),
         routes: {
-          '/login': (context) => LoginScreen(),
-          '/register': (context) => RegisterScreen(),
-          '/home': (context) => HomeScreen(),
+          '/login': (context) => const LoginScreen(),
+          '/register': (context) => const RegisterScreen(),
+          '/home': (context) => const HomeScreen(),
         },
       ),
     );

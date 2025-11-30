@@ -6,7 +6,7 @@ import '../models/user.dart';
 import '../models/vehicle.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8000'; // Local development server
+  static const String baseUrl = 'https://vehicleq.onrender.com'; // Production backend URL
 
   // User Registration
   static Future<User> registerUser({

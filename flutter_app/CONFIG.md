@@ -11,6 +11,6 @@
 // static const String baseUrl = 'http://192.168.1.100:8000';
 
 // For production:
-// static const String baseUrl = 'https://your-production-server.com';
+// static const String baseUrl = 'https://vehicleq.onrender.com';
 
 // NOTE: Update this in lib/services/api_service.dart
