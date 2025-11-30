@@ -1,0 +1,151 @@
+# ⚡ VehicleQ Quick Reference - Windows Desktop
+
+## 🎯 Two-Terminal Setup
+
+### Terminal 1: Backend (FastAPI)
+```bash
+cd c:\Users\kalle\VehicleQ\backend
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+✅ API runs on: `http://localhost:8000`
+
+### Terminal 2: Frontend (Flutter)
+```bash
+cd c:\Users\kalle\VehicleQ\flutter_app
+flutter run -d windows
+```
+✅ App opens in Windows window
+
+---
+
+## 🎮 Keyboard Shortcuts (While App Running)
+
+| Key | Action |
+|-----|--------|
+| `r` | Hot reload (reload code changes) |
+| `R` | Hot restart (full app restart) |
+| `q` | Quit app |
+
+---
+
+## 🔗 Important URLs
+
+| URL | Purpose |
+|-----|---------|
+| `http://localhost:8000/docs` | API Documentation (Swagger) |
+| `http://localhost:8000/` | API Health Check |
+
+---
+
+## 📱 Test Accounts
+
+### Create One (In App)
+- **Username**: `testuser`
+- **Email**: `test@example.com`
+- **Password**: `test123`
+- **Name**: `Test User`
+- **Phone**: `1234567890`
+
+---
+
+## 📂 Key Files
+
+| File | Purpose |
+|------|---------|
+| `backend/main.py` | Backend API code |
+| `flutter_app/lib/main.dart` | Frontend entry point |
+| `flutter_app/lib/services/api_service.dart` | API communication |
+| `backend/vehicles.db` | Database (auto-created) |
+
+---
+
+## 🐛 Quick Fixes
+
+**App won't connect to backend?**
+- Verify backend terminal shows: "Application startup complete"
+- Check `api_service.dart` has `baseUrl = 'http://localhost:8000'`
+
+**Backend error on start?**
+- Delete `vehicles.db` and restart
+- Run `pip install -r requirements.txt`
+
+**Port 8000 already in use?**
+- Kill existing: `netstat -ano | findstr :8000` then close process
+- Or change port in `uvicorn` command
+
+---
+
+## 📊 What You Have
+
+```
+✅ Backend: FastAPI on localhost:8000
+✅ Frontend: Flutter Windows Desktop App
+✅ Database: SQLite (vehicles.db)
+✅ Storage: images/ folder
+✅ State Management: Provider
+✅ API: 9 endpoints ready
+```
+
+---
+
+## 🚀 First-Time Steps
+
+1. **Terminal 1**: Start backend (above)
+2. **Terminal 2**: Start Flutter app (above)
+3. **App opens** in Windows window
+4. **Register** new account
+5. **Login** with credentials
+6. **Upload** vehicle with image
+7. **View** vehicles in app
+8. **Edit** your profile
+
+---
+
+## 💾 Database Commands
+
+**Reset database** (delete all data):
+```bash
+del c:\Users\kalle\VehicleQ\backend\vehicles.db
+```
+
+**View database**:
+```bash
+cd c:\Users\kalle\VehicleQ\backend
+sqlite3 vehicles.db
+> SELECT * FROM users;
+> .quit
+```
+
+---
+
+## 📚 Full Documentation
+
+- `README.md` - Overview
+- `QUICKSTART.md` - General setup
+- `WINDOWS_DESKTOP_GUIDE.md` - Windows-specific guide ← You are here
+- `SETUP.md` - Detailed setup
+- `ARCHITECTURE.md` - Technical details
+
+---
+
+## ✨ Features to Test
+
+- ✅ Register new account
+- ✅ Login/logout
+- ✅ Upload vehicle photo
+- ✅ View vehicle list
+- ✅ Edit profile
+- ✅ Navigate tabs
+- ✅ Hot reload (press `r`)
+
+---
+
+## 🎉 Everything Ready!
+
+Backend is running. Now just run:
+```bash
+cd c:\Users\kalle\VehicleQ\flutter_app
+flutter run -d windows
+```
+
+**That's it!** 🚀
