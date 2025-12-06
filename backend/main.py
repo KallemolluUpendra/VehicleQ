@@ -7,6 +7,9 @@ from sqlalchemy.orm import sessionmaker
 import shutil, os
 from datetime import datetime
 import pytz
+from PIL import Image
+import io
+import uuid
 
 app = FastAPI()
 
@@ -46,6 +49,45 @@ Base.metadata.create_all(bind=engine)
 
 UPLOAD_DIR = "images"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Image optimization settings
+MAX_IMAGE_SIZE = (1920, 1080)  # Max resolution
+JPEG_QUALITY = 85  # Compression quality (1-100)
+MAX_FILE_SIZE_MB = 5  # Maximum file size in MB
+
+def optimize_image(image_file: UploadFile) -> str:
+    """Optimize and compress uploaded image"""
+    # Read image data
+    image_data = image_file.file.read()
+    
+    # Check file size
+    if len(image_data) > MAX_FILE_SIZE_MB * 1024 * 1024:
+        raise HTTPException(status_code=400, detail=f"Image size exceeds {MAX_FILE_SIZE_MB}MB")
+    
+    # Open image with PIL
+    img = Image.open(io.BytesIO(image_data))
+    
+    # Convert RGBA to RGB if necessary
+    if img.mode in ('RGBA', 'LA', 'P'):
+        background = Image.new('RGB', img.size, (255, 255, 255))
+        if img.mode == 'P':
+            img = img.convert('RGBA')
+        background.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
+        img = background
+    
+    # Resize if image is too large
+    if img.size[0] > MAX_IMAGE_SIZE[0] or img.size[1] > MAX_IMAGE_SIZE[1]:
+        img.thumbnail(MAX_IMAGE_SIZE, Image.Resampling.LANCZOS)
+    
+    # Generate unique filename
+    file_extension = "jpg"
+    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    file_location = f"{UPLOAD_DIR}/{unique_filename}"
+    
+    # Save optimized image
+    img.save(file_location, "JPEG", quality=JPEG_QUALITY, optimize=True)
+    
+    return file_location
 
 @app.get("/")
 async def root():
@@ -109,9 +151,13 @@ def update_profile(user_id: int, full_name: str = Form(...), phone: str = Form(.
 
 @app.post("/upload/")
 def upload_vehicle(user_id: int = Form(...), number: str = Form(...), owner: str = Form(...), image: UploadFile = File(...)):
-    file_location = f"{UPLOAD_DIR}/{image.filename}"
-    with open(file_location, "wb") as buffer:
-        shutil.copyfileobj(image.file, buffer)
+    # Validate file type
+    if not image.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    # Optimize and save image
+    file_location = optimize_image(image)
+    
     db = SessionLocal()
     # Convert current time to IST (India Standard Time)
     ist = pytz.timezone('Asia/Kolkata')
