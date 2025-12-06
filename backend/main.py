@@ -6,9 +6,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import shutil, os
 from datetime import datetime
-import threading
-import time
-import urllib.request
 import pytz
 
 app = FastAPI()
@@ -53,30 +50,6 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @app.get("/")
 async def root():
     return {"message": "VehicleQ API is running!"}
-
-
-# Keep the Render-hosted site awake by periodically requesting its root URL.
-# Run in a daemon thread so it doesn't block the main server process.
-PING_URL = "https://vehicleq.onrender.com/"
-
-def _keep_awake_loop():
-    while True:
-        try:
-            req = urllib.request.Request(PING_URL, headers={"User-Agent": "VehicleQ-Pinger/1.0"})
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                # read a small chunk to complete the request
-                _ = resp.read(16)
-                print(f"Keep-awake ping to {PING_URL} succeeded: {resp.status}")
-        except Exception as e:
-            print(f"Keep-awake ping to {PING_URL} failed: {e}")
-        # Wait 60 seconds between pings
-        time.sleep(60)
-
-
-@app.on_event("startup")
-def _start_keep_awake_thread():
-    t = threading.Thread(target=_keep_awake_loop, daemon=True, name="keep-awake-thread")
-    t.start()
 
 # User Authentication Endpoints
 @app.post("/register/")
