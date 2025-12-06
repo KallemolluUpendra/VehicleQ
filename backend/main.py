@@ -9,6 +9,7 @@ from datetime import datetime
 import threading
 import time
 import urllib.request
+import pytz
 
 app = FastAPI()
 
@@ -134,7 +135,9 @@ def upload_vehicle(user_id: int = Form(...), number: str = Form(...), owner: str
     with open(file_location, "wb") as buffer:
         shutil.copyfileobj(image.file, buffer)
     db = SessionLocal()
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # Convert current time to IST (India Standard Time)
+    ist = pytz.timezone('Asia/Kolkata')
+    timestamp = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S')
     vehicle = Vehicle(number=number, owner=owner, image_path=file_location, timestamp=timestamp, user_id=user_id)
     db.add(vehicle)
     db.commit()
@@ -145,14 +148,16 @@ def upload_vehicle(user_id: int = Form(...), number: str = Form(...), owner: str
 @app.get("/vehicles/")
 def get_vehicles():
     db = SessionLocal()
-    vehicles = db.query(Vehicle).all()
+    # Sort by timestamp descending (latest first)
+    vehicles = db.query(Vehicle).order_by(Vehicle.timestamp.desc()).all()
     db.close()
     return [{"id": v.id, "number": v.number, "owner": v.owner, "image_path": v.image_path, "timestamp": v.timestamp} for v in vehicles]
 
 @app.get("/vehicles/{user_id}")
 def get_user_vehicles(user_id: int):
     db = SessionLocal()
-    vehicles = db.query(Vehicle).filter(Vehicle.user_id == user_id).all()
+    # Sort by timestamp descending (latest first)
+    vehicles = db.query(Vehicle).filter(Vehicle.user_id == user_id).order_by(Vehicle.timestamp.desc()).all()
     db.close()
     return [{"id": v.id, "number": v.number, "owner": v.owner, "image_path": v.image_path, "timestamp": v.timestamp} for v in vehicles]
 
