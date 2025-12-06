@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 import shutil, os
 from datetime import datetime
 import pytz
+import sys
 
 app = FastAPI()
 
@@ -19,10 +20,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATABASE_URL = "sqlite:///./vehicles.db"
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+# Use PostgreSQL if DATABASE_URL env var is set (Render), otherwise use SQLite (local dev)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./vehicles.db")
+
+# Render PostgreSQL URLs start with postgres://, but SQLAlchemy needs postgresql://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+try:
+    engine = create_engine(DATABASE_URL)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    Base = declarative_base()
+except Exception as e:
+    print(f"Database connection error: {e}", file=sys.stderr)
+    raise
 
 class User(Base):
     __tablename__ = "users"
