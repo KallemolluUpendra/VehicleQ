@@ -7,7 +7,6 @@ from sqlalchemy.orm import sessionmaker
 import shutil, os
 from datetime import datetime
 import pytz
-import sys
 
 app = FastAPI()
 
@@ -20,20 +19,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Use PostgreSQL if DATABASE_URL env var is set (Render), otherwise use SQLite (local dev)
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./vehicles.db")
-
-# Render PostgreSQL URLs start with postgres://, but SQLAlchemy needs postgresql://
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
-try:
-    engine = create_engine(DATABASE_URL)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base = declarative_base()
-except Exception as e:
-    print(f"Database connection error: {e}", file=sys.stderr)
-    raise
+DATABASE_URL = "sqlite:///./vehicles.db"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"
@@ -61,6 +50,11 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @app.get("/")
 async def root():
     return {"message": "VehicleQ API is running!"}
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for uptime monitoring"""
+    return {"status": "healthy", "timestamp": datetime.now(pytz.timezone('Asia/Kolkata')).isoformat()}
 
 # User Authentication Endpoints
 @app.post("/register/")
