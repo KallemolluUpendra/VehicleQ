@@ -33,7 +33,7 @@ if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Log database being used
-print("🐘 Using PostgreSQL database with image storage")
+print("🐘 Using PostgreSQL database with image storage.")
 print(f"   Database: {DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else 'local'}")
 
 engine = create_engine(DATABASE_URL)
