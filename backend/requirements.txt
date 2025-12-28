@@ -3,8 +3,5 @@ uvicorn
 sqlalchemy
 pillow
 python-multipart
-usb
-pyusb
-pycryptodome
 pytz
 psycopg2-binary
