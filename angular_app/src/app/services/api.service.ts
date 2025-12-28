@@ -9,7 +9,7 @@ import { Vehicle } from '../models/vehicle.model';
 })
 export class ApiService {
   // Production URL
-  private baseUrl = 'https://vehicleq.onrender.com';
+  private baseUrl = 'https://vehicleq-dev.onrender.com';
 
   constructor(private http: HttpClient) { }
 

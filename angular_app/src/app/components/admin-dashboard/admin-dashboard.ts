@@ -8,7 +8,7 @@ import { AdminService, AdminVehicle, ExportData } from '../../services/admin.ser
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="min-vh-100 bg-light">
+    <div class="min-vh-100 bg-light" style="margin-top:1.5rem;">
       <!-- Header -->
       <nav class="navbar navbar-dark bg-primary shadow-sm sticky-top">
         <div class="container-fluid px-3 px-md-4">
@@ -288,7 +288,10 @@ import { AdminService, AdminVehicle, ExportData } from '../../services/admin.ser
                   <h6 class="fw-bold">
                     <i class="bi bi-person-circle text-success me-2"></i>{{ selectedVehicle.username }}
                   </h6>
-                  <small class="text-muted">{{ selectedVehicle.user_email }}</small>
+                  <h6 class="fw-bold">
+                    <i class="bi bi-person-circle text-success me-2"></i>{{ selectedVehicle.user_email }}
+                  </h6>
+                 
                 </div>
                 <div class="mb-3">
                   <label class="text-muted small mb-1">User ID</label>
@@ -447,16 +450,25 @@ export class AdminDashboardComponent implements OnInit {
   loadVehicles(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    console.log('Loading vehicles from:', this.adminService['apiUrl'] + '/admin/vehicles/');
     this.adminService.getAllVehicles().subscribe({
       next: (vehicles) => {
-        console.log('Vehicles loaded:', vehicles);
+        console.log('Vehicles loaded successfully:', vehicles);
+        console.log('Number of vehicles:', vehicles.length);
         this.vehicles = vehicles;
         this.isLoading = false;
+        
+        if (vehicles.length === 0) {
+          console.warn('No vehicles found in database');
+        }
+        
         this.cdr.detectChanges();
       },
       error: (error: any) => {
         console.error('Error loading vehicles:', error);
-        this.errorMessage = `Failed to load vehicles: ${error.message || error.statusText || 'Unknown error'}`;
+        console.error('Error status:', error.status);
+        console.error('Error details:', error.error);
+        this.errorMessage = `Failed to load vehicles: ${error.error?.detail || error.message || error.statusText || 'Unknown error'}`;
         this.isLoading = false;
         this.cdr.detectChanges();
       }
@@ -506,15 +518,11 @@ export class AdminDashboardComponent implements OnInit {
     this.isExporting = true;
     this.errorMessage = '';
     this.adminService.exportData().subscribe({
-      next: (data: ExportData) => {
+      next: async (data: ExportData) => {
         try {
-          this.adminService.downloadExportAsJson(data);
-          // Use setTimeout to ensure download starts before showing alert
-          setTimeout(() => {
-            alert('Data exported successfully!');
-            this.isExporting = false;
-            this.cdr.detectChanges();
-          }, 100);
+          await this.adminService.downloadExportAsJson(data);
+          this.isExporting = false;
+          this.cdr.detectChanges();
         } catch (error) {
           alert('Failed to download export file. Please try again.');
           this.isExporting = false;

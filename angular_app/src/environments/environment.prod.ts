@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://vehicleq.onrender.com'
+  apiUrl: 'https://vehicleq-dev.onrender.com'
 };

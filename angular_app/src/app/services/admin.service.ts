@@ -3,6 +3,9 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 export interface AdminVehicle {
   id: number;
@@ -24,7 +27,7 @@ export interface ExportData {
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = 'https://vehicleq.onrender.com';  // Production URL
+  private apiUrl = 'https://vehicleq-dev.onrender.com';  // Production URL
   private isAdminLoggedInSubject = new BehaviorSubject<boolean>(false);
   public isAdminLoggedIn$ = this.isAdminLoggedInSubject.asObservable();
   private isBrowser: boolean;
@@ -88,15 +91,79 @@ export class AdminService {
     return this.http.post(`${this.apiUrl}/admin/import/`, data);
   }
 
-  downloadExportAsJson(data: ExportData): void {
+  async downloadExportAsJson(data: ExportData): Promise<void> {
     if (!this.isBrowser) return;
     
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `vehicleq-export-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    window.URL.revokeObjectURL(url);
+    const jsonString = JSON.stringify(data, null, 2);
+    const fileName = `vehicleq-export-${new Date().toISOString().split('T')[0]}.json`;
+    
+    // Check if running on native platform (Android/iOS)
+    if (Capacitor.isNativePlatform()) {
+      // On modern Android (targetSdk 30+), writing directly to public Downloads using
+      // file paths often fails due to scoped storage (even if permissions are granted).
+      // Instead, write to app-owned storage and let the user choose where to save via Share.
+      try {
+        // 1) Write to app-owned Documents (fallback to Data)
+        let directory: Directory = Directory.Documents;
+        try {
+          await Filesystem.writeFile({
+            path: fileName,
+            data: jsonString,
+            directory,
+            encoding: Encoding.UTF8,
+          });
+        } catch {
+          directory = Directory.Data;
+          await Filesystem.writeFile({
+            path: fileName,
+            data: jsonString,
+            directory,
+            encoding: Encoding.UTF8,
+          });
+        }
+
+        // 2) Get a URI and open the system share/save sheet
+        const uriResult = await Filesystem.getUri({ path: fileName, directory });
+        await Share.share({
+          title: 'VehicleQ Export',
+          text: `VehicleQ export file: ${fileName}`,
+          url: uriResult.uri,
+          dialogTitle: 'Save VehicleQ export',
+        });
+      } catch (error: any) {
+        console.error('Export error:', error);
+        alert(
+          `Failed to export file: ${error?.message || error || 'Unknown error'}\n\n` +
+            `Tip: Choose a destination from the Save/Share dialog (Files, Drive, etc).`
+        );
+      }
+    } else {
+      // Web browser download
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the URL object
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
+    }
+  }
+
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   }
 }
