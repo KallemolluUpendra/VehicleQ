@@ -3,6 +3,7 @@ import { LoginComponent } from './components/login/login';
 import { RegisterComponent } from './components/register/register';
 import { HomeComponent } from './components/home/home';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen';
+import { AdminComponent } from './components/admin/admin';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -11,5 +12,6 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
+  { path: 'admin', component: AdminComponent },
   { path: '**', redirectTo: '/splash' }
 ];

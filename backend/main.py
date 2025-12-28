@@ -1,7 +1,7 @@
 from fastapi import HTTPException, FastAPI, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import shutil, os
@@ -31,7 +31,7 @@ if DATABASE_URL.startswith("postgres://"):
 
 # Log database being used
 if DATABASE_URL.startswith("postgresql://"):
-    print("🐘 Using PostgreSQL database")
+    print("🐘 Using PostgreSQL database with image storage")
 else:
     print("📁 Using SQLite database (local development)")
 
@@ -53,28 +53,21 @@ class Vehicle(Base):
     id = Column(Integer, primary_key=True, index=True)
     number = Column(String, index=True)
     owner = Column(String, index=True)
-    image_path = Column(String)
+    image_path = Column(String)  # Deprecated - kept for backward compatibility
+    image_data = Column(LargeBinary)  # Store image as binary data
     timestamp = Column(String)
     user_id = Column(Integer)
 
 Base.metadata.create_all(bind=engine)
 
-UPLOAD_DIR = "images"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 # Image optimization settings
 MAX_IMAGE_SIZE = (1920, 1080)  # Max resolution
 JPEG_QUALITY = 85  # Compression quality (1-100)
-MAX_FILE_SIZE_MB = 5  # Maximum file size in MB
 
-def optimize_image(image_file: UploadFile) -> str:
-    """Optimize and compress uploaded image"""
+def optimize_image(image_file: UploadFile) -> bytes:
+    """Optimize and compress uploaded image, return as bytes"""
     # Read image data
     image_data = image_file.file.read()
-    
-    # Check file size
-    if len(image_data) > MAX_FILE_SIZE_MB * 1024 * 1024:
-        raise HTTPException(status_code=400, detail=f"Image size exceeds {MAX_FILE_SIZE_MB}MB")
     
     # Open image with PIL
     img = Image.open(io.BytesIO(image_data))
@@ -91,15 +84,10 @@ def optimize_image(image_file: UploadFile) -> str:
     if img.size[0] > MAX_IMAGE_SIZE[0] or img.size[1] > MAX_IMAGE_SIZE[1]:
         img.thumbnail(MAX_IMAGE_SIZE, Image.Resampling.LANCZOS)
     
-    # Generate unique filename
-    file_extension = "jpg"
-    unique_filename = f"{uuid.uuid4()}.{file_extension}"
-    file_location = f"{UPLOAD_DIR}/{unique_filename}"
-    
-    # Save optimized image
-    img.save(file_location, "JPEG", quality=JPEG_QUALITY, optimize=True)
-    
-    return file_location
+    # Save optimized image to bytes
+    output = io.BytesIO()
+    img.save(output, "JPEG", quality=JPEG_QUALITY, optimize=True)
+    return output.getvalue()
 
 @app.get("/")
 async def root():
@@ -167,19 +155,19 @@ def upload_vehicle(user_id: int = Form(...), number: str = Form(...), owner: str
     if not image.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="File must be an image")
     
-    # Optimize and save image
-    file_location = optimize_image(image)
+    # Optimize image and get bytes
+    image_bytes = optimize_image(image)
     
     db = SessionLocal()
     # Convert current time to IST (India Standard Time)
     ist = pytz.timezone('Asia/Kolkata')
     timestamp = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S')
-    vehicle = Vehicle(number=number, owner=owner, image_path=file_location, timestamp=timestamp, user_id=user_id)
+    vehicle = Vehicle(number=number, owner=owner, image_data=image_bytes, timestamp=timestamp, user_id=user_id)
     db.add(vehicle)
     db.commit()
     db.refresh(vehicle)
     db.close()
-    return {"id": vehicle.id, "number": number, "owner": owner, "image_path": file_location, "timestamp": timestamp}
+    return {"id": vehicle.id, "number": number, "owner": owner, "timestamp": timestamp}
 
 @app.get("/vehicles/")
 def get_vehicles():
@@ -187,7 +175,7 @@ def get_vehicles():
     # Sort by timestamp descending (latest first)
     vehicles = db.query(Vehicle).order_by(Vehicle.timestamp.desc()).all()
     db.close()
-    return [{"id": v.id, "number": v.number, "owner": v.owner, "image_path": v.image_path, "timestamp": v.timestamp} for v in vehicles]
+    return [{"id": v.id, "number": v.number, "owner": v.owner, "timestamp": v.timestamp} for v in vehicles]
 
 @app.get("/vehicles/{user_id}")
 def get_user_vehicles(user_id: int):
@@ -195,16 +183,16 @@ def get_user_vehicles(user_id: int):
     # Sort by timestamp descending (latest first)
     vehicles = db.query(Vehicle).filter(Vehicle.user_id == user_id).order_by(Vehicle.timestamp.desc()).all()
     db.close()
-    return [{"id": v.id, "number": v.number, "owner": v.owner, "image_path": v.image_path, "timestamp": v.timestamp} for v in vehicles]
+    return [{"id": v.id, "number": v.number, "owner": v.owner, "timestamp": v.timestamp} for v in vehicles]
 
 @app.get("/image/{vehicle_id}")
 def get_image(vehicle_id: int):
     db = SessionLocal()
     vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
     db.close()
-    if vehicle:
-        return FileResponse(vehicle.image_path)
-    return {"error": "Image not found"}
+    if vehicle and vehicle.image_data:
+        return Response(content=vehicle.image_data, media_type="image/jpeg")
+    raise HTTPException(status_code=404, detail="Image not found")
 
 @app.delete("/vehicle/{vehicle_id}")
 def delete_vehicle(vehicle_id: int):
@@ -213,22 +201,123 @@ def delete_vehicle(vehicle_id: int):
     if not vehicle:
         db.close()
         raise HTTPException(status_code=404, detail="Vehicle not found")
-    # Attempt to remove the image file from disk if it exists.
-    image_path = vehicle.image_path
-    image_removed = False
-    try:
-        if image_path and os.path.exists(image_path):
-            try:
-                os.remove(image_path)
-                image_removed = True
-            except Exception:
-                # If file deletion fails, continue to remove DB row.
-                image_removed = False
-    except Exception:
-        # Defensive: if os.path.exists fails for any reason, ignore and continue.
-        image_removed = False
-
+    
     db.delete(vehicle)
     db.commit()
     db.close()
-    return {"message": "Vehicle deleted", "image_removed": image_removed}
+    return {"message": "Vehicle deleted successfully"}
+
+# Admin Endpoints
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+
+@app.post("/admin/login/")
+def admin_login(username: str = Form(...), password: str = Form(...)):
+    """Admin authentication endpoint"""
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        return {"success": True, "message": "Admin login successful"}
+    raise HTTPException(status_code=401, detail="Invalid admin credentials")
+
+@app.get("/admin/vehicles/")
+def get_all_vehicles_admin():
+    """Get all vehicles from all users (admin only)"""
+    db = SessionLocal()
+    vehicles = db.query(Vehicle).order_by(Vehicle.timestamp.desc()).all()
+    db.close()
+    return [{
+        "id": v.id,
+        "number": v.number,
+        "owner": v.owner,
+        "timestamp": v.timestamp,
+        "user_id": v.user_id
+    } for v in vehicles]
+
+@app.delete("/admin/vehicle/{vehicle_id}")
+def admin_delete_vehicle(vehicle_id: int):
+    """Delete any vehicle (admin only)"""
+    db = SessionLocal()
+    vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
+    if not vehicle:
+        db.close()
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    db.delete(vehicle)
+    db.commit()
+    db.close()
+    return {"message": "Vehicle deleted successfully"}
+
+@app.get("/admin/export/")
+def export_all_data():
+    """Export all data as JSON (admin only)"""
+    import base64
+    db = SessionLocal()
+    
+    # Export users
+    users = db.query(User).all()
+    users_data = [{
+        "id": u.id,
+        "username": u.username,
+        "email": u.email,
+        "password": u.password,
+        "full_name": u.full_name,
+        "phone": u.phone
+    } for u in users]
+    
+    # Export vehicles with images as base64
+    vehicles = db.query(Vehicle).all()
+    vehicles_data = [{
+        "id": v.id,
+        "number": v.number,
+        "owner": v.owner,
+        "timestamp": v.timestamp,
+        "user_id": v.user_id,
+        "image_data": base64.b64encode(v.image_data).decode('utf-8') if v.image_data else None
+    } for v in vehicles]
+    
+    db.close()
+    
+    return {
+        "export_date": datetime.now(pytz.timezone('Asia/Kolkata')).isoformat(),
+        "users": users_data,
+        "vehicles": vehicles_data
+    }
+
+@app.post("/admin/import/")
+def import_data(data: dict):
+    """Import data from JSON export (admin only)"""
+    import base64
+    db = SessionLocal()
+    
+    try:
+        # Import users
+        if "users" in data:
+            for user_data in data["users"]:
+                # Check if user already exists
+                existing = db.query(User).filter(User.username == user_data["username"]).first()
+                if not existing:
+                    user = User(**{k: v for k, v in user_data.items() if k != "id"})
+                    db.add(user)
+        
+        # Import vehicles
+        if "vehicles" in data:
+            for vehicle_data in data["vehicles"]:
+                # Decode base64 image
+                image_data_b64 = vehicle_data.pop("image_data", None)
+                image_bytes = base64.b64decode(image_data_b64) if image_data_b64 else None
+                
+                vehicle = Vehicle(
+                    number=vehicle_data["number"],
+                    owner=vehicle_data["owner"],
+                    timestamp=vehicle_data["timestamp"],
+                    user_id=vehicle_data["user_id"],
+                    image_data=image_bytes
+                )
+                db.add(vehicle)
+        
+        db.commit()
+        db.close()
+        return {"message": "Data imported successfully"}
+    except Exception as e:
+        db.rollback()
+        db.close()
+        raise HTTPException(status_code=400, detail=f"Import failed: {str(e)}")

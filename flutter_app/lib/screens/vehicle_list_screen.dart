@@ -222,9 +222,10 @@ class VehicleCard extends StatelessWidget {
                         ],
                       ),
                     );
-                    if (confirm == true) {
+                    if (confirm == true && context.mounted) {
                       final provider = Provider.of<VehicleProvider>(context, listen: false);
                       await provider.deleteVehicle(vehicle.id);
+                      if (!context.mounted) return;
                       final err = provider.error;
                       if (err == null) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vehicle deleted')));
