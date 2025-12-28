@@ -3,21 +3,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #FFD700 0%, #FFD700 100%);
+  background: linear-gradient(135deg, #F5F7FA 0%, #E1E8ED 100%);
   padding: 20px;
 }
 
 .login-card {
-  background: linear-gradient(135deg, #FFD700 0%, #FFD700 100%);
-  border: 2px solid #F9A825;
-  border-radius: 20px;
+  background: #FFFFFF;
+  border: 1px solid #E1E8ED;
+  border-radius: 16px;
   padding: 40px;
   max-width: 440px;
   width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 h1 {
-  color: #000000;
+  color: #2C3E50;
   font-weight: 700;
 }
 
@@ -25,8 +26,8 @@ h1 {
   width: 150px;
   height: 150px;
   object-fit: cover;
-  background: #FFD700;
+  background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
   border-radius: 50%;
   padding: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
 }

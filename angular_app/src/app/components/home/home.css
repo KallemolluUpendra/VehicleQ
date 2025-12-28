@@ -1,6 +1,7 @@
-/* Yellow theme */
+/* Clean theme */
 .home-container {
-  color: #000000;
+  color: #2C3E50;
+  background-color: #F5F7FA;
 }
 
 .navbar {

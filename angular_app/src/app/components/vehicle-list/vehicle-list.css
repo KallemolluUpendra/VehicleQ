@@ -2,16 +2,16 @@
   padding: 25px 18px 35px 18px;
   max-width: 1400px;
   margin: 0 auto;
-  background-color: #FFD700;;
+  background-color: #F5F7FA;
   min-height: 100vh;
 }
 
 .header {
-  background-color: #FFD700;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background-color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   margin-bottom: 24px;
-  border-radius: 8px;
-  color: #000000;
+  border-radius: 12px;
+  color: #2C3E50;
 }
 
 .vehicles-list {
@@ -22,24 +22,24 @@
 
 .vehicle-item {
   display: flex;
-  background: linear-gradient(135deg, #FFF59D 0%, #FFF9C4 100%);
-  border: 2px solid #F9A825;
+  background: #FFFFFF;
+  border: 1px solid #E1E8ED;
   border-radius: 12px;
   padding: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .vehicle-item:hover {
   transform: translateX(4px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  border-color: #F57F17;
+  box-shadow: 0 4px 16px rgba(74, 144, 226, 0.15);
+  border-color: #4A90E2;
 }
 
 .vehicle-item:active {
   transform: translateX(2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* Thumbnail on Left */
@@ -49,8 +49,8 @@
   height: 120px;
   border-radius: 8px;
   overflow: hidden;
-  border: 2px solid #F9A825;
-  background: #ffffff;
+  border: 2px solid #E1E8ED;
+  background: #F5F7FA;
 }
 
 .thumbnail-image {
@@ -81,7 +81,7 @@
 .vehicle-number {
   font-size: 20px;
   font-weight: 700;
-  color: #000000;
+  color: #2C3E50;
   margin: 0;
   letter-spacing: 0.5px;
 }
@@ -100,20 +100,20 @@
 }
 
 .info-icon {
-  color: #F57F17;
+  color: #4A90E2;
   flex-shrink: 0;
 }
 
 .info-text {
   font-size: 14px;
-  color: #333333;
+  color: #2C3E50;
   font-weight: 500;
 }
 
 .view-indicator {
   display: flex;
   align-items: center;
-  color: #666666;
+  color: #7F8C8D;
   font-size: 13px;
   margin-top: 4px;
 }

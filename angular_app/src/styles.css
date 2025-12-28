@@ -1,6 +1,33 @@
 /* Global styles for VehicleQ */
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
+/* CSS Variables for Clean Color Scheme */
+:root {
+  /* Primary Colors */
+  --primary-color: #4A90E2;
+  --primary-dark: #357ABD;
+  --primary-light: #6BA3E8;
+  
+  /* Secondary Colors */
+  --secondary-color: #7B68EE;
+  --secondary-dark: #6A5ACD;
+  --secondary-light: #9B8EF0;
+  
+  /* Accent Colors */
+  --success-color: #48C774;
+  --success-dark: #3AB561;
+  --warning-color: #FFB84D;
+  --danger-color: #F14668;
+  
+  /* Neutral Colors */
+  --bg-color: #F5F7FA;
+  --card-bg: #FFFFFF;
+  --text-primary: #2C3E50;
+  --text-secondary: #7F8C8D;
+  --border-color: #E1E8ED;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -9,55 +36,59 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #FFD700 !important;
-  color: #000000 !important;
+  background: var(--bg-color) !important;
+  color: var(--text-primary) !important;
 }
 
 html, body {
   height: 100%;
 }
 
-/* Override Bootstrap defaults for yellow theme */
+/* Override Bootstrap defaults for clean theme */
 .bg-light {
-  background-color: #FFF9C4 !important;
+  background-color: var(--bg-color) !important;
 }
 
 .bg-white {
-  background-color: #FFEB3B !important;
+  background-color: var(--card-bg) !important;
 }
 
 .card {
-  background-color: #FFF59D !important;
-  border-color: #F9A825 !important;
-  color: #000000 !important;
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 2px 8px var(--shadow-color) !important;
 }
 
 .text-muted {
-  color: #424242 !important;
+  color: var(--text-secondary) !important;
 }
 
 .btn-primary {
-  background-color: #F9A825 !important;
-  border-color: #F57F17 !important;
-  color: #000000 !important;
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #FFFFFF !important;
+  transition: all 0.3s ease !important;
 }
 
 .btn-primary:hover {
-  background-color: #F57F17 !important;
-  border-color: #E65100 !important;
+  background-color: var(--primary-dark) !important;
+  border-color: var(--primary-dark) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3) !important;
 }
 
 .btn-outline-primary {
-  border-color: #F9A825 !important;
-  color: #000000 !important;
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
 }
 
 .btn-outline-primary:hover {
-  background-color: #F9A825 !important;
-  color: #000000 !important;
+  background-color: var(--primary-color) !important;
+  color: #FFFFFF !important;
 }
 
-/* Input fields - Transparent background with black text */
+/* Input fields - Clean white background with subtle borders */
 .form-control,
 .form-select,
 input[type="text"],
@@ -67,10 +98,10 @@ input[type="tel"],
 input[type="number"],
 input[type="file"],
 textarea {
-  background-color: transparent !important;
-  color: #000000 !important; /* Black text */
-  border: 2px solid #000000 !important; /* Black border */
-  border-radius: 12px !important; /* More rounded corners */
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border: 2px solid var(--border-color) !important;
+  border-radius: 8px !important;
   transition: all 0.3s ease !important;
 }
 
@@ -78,30 +109,30 @@ textarea {
 .form-select:focus,
 input:focus,
 textarea:focus {
-  background-color: rgba(255, 255, 255, 0.1) !important; /* Slight white tint on focus */
-  color: #000000 !important;
-  border-color: #000000 !important;
-  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.15) !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.15) !important;
 }
 
 .form-control::placeholder,
 input::placeholder,
 textarea::placeholder {
-  color: #666666 !important; /* Dark gray placeholder */
+  color: var(--text-secondary) !important;
   opacity: 0.7;
 }
 
 .input-group-text {
-  background-color: transparent !important;
-  color: #000000 !important;
-  border: 2px solid #000000 !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border: 2px solid var(--border-color) !important;
   transition: all 0.3s ease !important;
 }
 
 /* Fix input group to keep elements connected */
 .input-group > .input-group-text {
-  border-top-left-radius: 12px !important;
-  border-bottom-left-radius: 12px !important;
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
   border-right: none !important;
 }
 
@@ -112,16 +143,16 @@ textarea::placeholder {
 }
 
 .input-group > .form-control:first-child {
-  border-top-left-radius: 12px !important;
-  border-bottom-left-radius: 12px !important;
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
 }
 
 .input-group > .btn {
-  border-top-right-radius: 12px !important;
-  border-bottom-right-radius: 12px !important;
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
   border-left: none !important;
-  border: 2px solid #000000 !important;
-  background-color: transparent !important;
+  border: 2px solid var(--border-color) !important;
+  background-color: var(--card-bg) !important;
   transition: all 0.3s ease !important;
 }
 
@@ -133,13 +164,13 @@ textarea::placeholder {
 
 /* Apply focus effect to entire input-group when input is focused */
 .input-group:focus-within {
-  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.15) !important;
-  border-radius: 12px !important;
+  box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.15) !important;
+  border-radius: 8px !important;
 }
 
 .input-group:focus-within > .input-group-text {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  border-color: #000000 !important;
+  background-color: var(--card-bg) !important;
+  border-color: var(--primary-color) !important;
 }
 
 .input-group:focus-within > .form-control {
@@ -147,6 +178,67 @@ textarea::placeholder {
 }
 
 .input-group:focus-within > .btn {
-  border-color: #000000 !important;
+  border-color: var(--primary-color) !important;
   box-shadow: none !important;
+}
+
+/* Additional Button Styles */
+.btn-success {
+  background-color: var(--success-color) !important;
+  border-color: var(--success-color) !important;
+  color: #FFFFFF !important;
+}
+
+.btn-success:hover {
+  background-color: var(--success-dark) !important;
+  border-color: var(--success-dark) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(72, 199, 116, 0.3) !important;
+}
+
+.btn-outline-secondary {
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--text-secondary) !important;
+  border-color: var(--text-secondary) !important;
+  color: #FFFFFF !important;
+}
+
+.btn-outline-danger {
+  border-color: var(--danger-color) !important;
+  color: var(--danger-color) !important;
+}
+
+.btn-outline-danger:hover {
+  background-color: var(--danger-color) !important;
+  color: #FFFFFF !important;
+}
+
+/* Smooth transitions for all buttons */
+.btn {
+  transition: all 0.3s ease !important;
+  border-radius: 8px !important;
+}
+
+.btn:active {
+  transform: translateY(0) !important;
+}
+
+/* Alert styles */
+.alert-danger {
+  background-color: rgba(241, 70, 104, 0.1) !important;
+  border-color: var(--danger-color) !important;
+  color: var(--danger-color) !important;
+}
+
+/* Spinner colors */
+.spinner-border {
+  color: var(--primary-color) !important;
+}
+
+.text-primary .spinner-border {
+  color: var(--primary-color) !important;
 }

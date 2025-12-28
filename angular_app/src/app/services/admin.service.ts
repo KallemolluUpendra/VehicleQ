@@ -24,7 +24,7 @@ export interface ExportData {
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = 'http://127.0.0.1:8000';  // Use local backend for development
+  private apiUrl = 'https://vehicleq.onrender.com';  // Production URL
   private isAdminLoggedInSubject = new BehaviorSubject<boolean>(false);
   public isAdminLoggedIn$ = this.isAdminLoggedInSubject.asObservable();
   private isBrowser: boolean;
