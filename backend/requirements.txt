@@ -7,3 +7,4 @@ usb
 pyusb
 pycryptodome
 pytz
+psycopg2-binary
