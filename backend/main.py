@@ -29,6 +29,12 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./vehicles.db")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Log database being used
+if DATABASE_URL.startswith("postgresql://"):
+    print("🐘 Using PostgreSQL database")
+else:
+    print("📁 Using SQLite database (local development)")
+
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
