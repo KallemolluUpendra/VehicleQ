@@ -6,6 +6,7 @@ import { tap } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { SaveFile } from './save-file.plugin';
 
 export interface AdminVehicle {
   id: number;
@@ -91,51 +92,26 @@ export class AdminService {
     return this.http.post(`${this.apiUrl}/admin/import/`, data);
   }
 
-  async downloadExportAsJson(data: ExportData): Promise<void> {
-    if (!this.isBrowser) return;
+  async downloadExportAsJson(data: ExportData): Promise<boolean> {
+    if (!this.isBrowser) return false;
     
     const jsonString = JSON.stringify(data, null, 2);
     const fileName = `vehicleq-export-${new Date().toISOString().split('T')[0]}.json`;
     
     // Check if running on native platform (Android/iOS)
     if (Capacitor.isNativePlatform()) {
-      // On modern Android (targetSdk 30+), writing directly to public Downloads using
-      // file paths often fails due to scoped storage (even if permissions are granted).
-      // Instead, write to app-owned storage and let the user choose where to save via Share.
+      // Prefer the Android Storage Access Framework "Save As" flow:
+      // user picks an exact location, then we write using ContentResolver.
       try {
-        // 1) Write to app-owned Documents (fallback to Data)
-        let directory: Directory = Directory.Documents;
-        try {
-          await Filesystem.writeFile({
-            path: fileName,
-            data: jsonString,
-            directory,
-            encoding: Encoding.UTF8,
-          });
-        } catch {
-          directory = Directory.Data;
-          await Filesystem.writeFile({
-            path: fileName,
-            data: jsonString,
-            directory,
-            encoding: Encoding.UTF8,
-          });
-        }
-
-        // 2) Get a URI and open the system share/save sheet
-        const uriResult = await Filesystem.getUri({ path: fileName, directory });
-        await Share.share({
-          title: 'VehicleQ Export',
-          text: `VehicleQ export file: ${fileName}`,
-          url: uriResult.uri,
-          dialogTitle: 'Save VehicleQ export',
+        const { uri } = await SaveFile.createDocument({
+          fileName,
+          mimeType: 'application/json',
         });
+        await SaveFile.writeToUri({ uri, data: jsonString });
+        return true;
       } catch (error: any) {
         console.error('Export error:', error);
-        alert(
-          `Failed to export file: ${error?.message || error || 'Unknown error'}\n\n` +
-            `Tip: Choose a destination from the Save/Share dialog (Files, Drive, etc).`
-        );
+        return false;
       }
     } else {
       // Web browser download
@@ -152,6 +128,8 @@ export class AdminService {
       
       // Clean up the URL object
       setTimeout(() => window.URL.revokeObjectURL(url), 100);
+
+      return true;
     }
   }
 

@@ -517,17 +517,17 @@ export class AdminDashboardComponent implements OnInit {
   exportData(): void {
     this.isExporting = true;
     this.errorMessage = '';
+    this.successMessage = '';
     this.adminService.exportData().subscribe({
       next: async (data: ExportData) => {
-        try {
-          await this.adminService.downloadExportAsJson(data);
-          this.isExporting = false;
-          this.cdr.detectChanges();
-        } catch (error) {
-          alert('Failed to download export file. Please try again.');
-          this.isExporting = false;
-          this.cdr.detectChanges();
+        const ok = await this.adminService.downloadExportAsJson(data);
+        if (ok) {
+          this.successMessage = 'Stored successfully!';
+        } else {
+          this.errorMessage = 'Failed to store export file.';
         }
+        this.isExporting = false;
+        this.cdr.detectChanges();
       },
       error: (error: any) => {
         alert('Failed to export data. Please try again.');

@@ -123,6 +123,21 @@ async def health_check():
         "version": "1.1.0"
     }
 
+@app.get("/health/db")
+async def health_check_db():
+    """Health check that also pings the database (keeps DB connection warm)."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(sqlalchemy.text("SELECT 1"))
+        return {
+            "status": "healthy",
+            "db": "ok",
+            "timestamp": datetime.now(pytz.timezone('Asia/Kolkata')).isoformat(),
+            "version": "1.1.0"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database health check failed: {e}")
+
 # User Authentication Endpoints
 @app.post("/register/")
 def register_user(username: str = Form(...), email: str = Form(...), password: str = Form(...), full_name: str = Form(...), phone: str = Form(...)):
