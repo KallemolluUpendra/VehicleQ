@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import sqlalchemy
 import shutil, os
 from datetime import datetime
 import pytz
@@ -59,6 +60,27 @@ class Vehicle(Base):
     user_id = Column(Integer)
 
 Base.metadata.create_all(bind=engine)
+
+# Manual migration: Add image_data column if it doesn't exist (PostgreSQL only)
+if DATABASE_URL.startswith("postgresql://"):
+    try:
+        with engine.connect() as conn:
+            # Check if column exists
+            result = conn.execute(
+                sqlalchemy.text(
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_name='vehicles' AND column_name='image_data'"
+                )
+            )
+            if not result.fetchone():
+                print("Adding image_data column to vehicles table...")
+                conn.execute(sqlalchemy.text("ALTER TABLE vehicles ADD COLUMN image_data BYTEA"))
+                conn.commit()
+                print("✅ Column added successfully")
+            else:
+                print("✅ image_data column already exists")
+    except Exception as e:
+        print(f"Migration check: {e}")
 
 # Image optimization settings
 MAX_IMAGE_SIZE = (1920, 1080)  # Max resolution
