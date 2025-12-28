@@ -117,7 +117,11 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint for uptime monitoring"""
-    return {"status": "healthy", "timestamp": datetime.now(pytz.timezone('Asia/Kolkata')).isoformat()}
+    return {
+        "status": "healthy", 
+        "timestamp": datetime.now(pytz.timezone('Asia/Kolkata')).isoformat(),
+        "version": "1.1.0"
+    }
 
 # User Authentication Endpoints
 @app.post("/register/")
