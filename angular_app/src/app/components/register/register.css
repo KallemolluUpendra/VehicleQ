@@ -1,0 +1,30 @@
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA000 100%);
+  padding: 20px;
+}
+
+.register-card {
+  background: #FFF59D;
+  border: 2px solid #F9A825;
+  border-radius: 20px;
+  padding: 35px;
+  max-width: 440px;
+  width: 100%;
+  max-height: 95vh;
+  overflow-y: auto;
+}
+
+h1 {
+  color: #212529;
+  font-weight: 700;
+}
+
+/* Bootstrap handles most styles now */
+
+.login-link a:hover {
+  text-decoration: underline;
+}

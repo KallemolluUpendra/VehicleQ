@@ -14,9 +14,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    VehicleListScreen(),
-    UploadVehicleScreen(),
-    ProfileScreen(),
+    const VehicleListScreen(),
+    const UploadVehicleScreen(),
+    const ProfileScreen(),
   ];
 
   @override

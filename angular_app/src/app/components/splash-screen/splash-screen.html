@@ -1,0 +1,18 @@
+<div class="splash-container" *ngIf="showVideo">
+  <video 
+    #splashVideo
+    class="splash-video"
+    autoplay 
+    muted 
+    playsinline
+    preload="auto"
+    webkit-playsinline
+    poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+    (ended)="onVideoEnded()"
+    (error)="onVideoError($event)"
+    (loadeddata)="onVideoLoaded()">
+    <source src="assets/splash.mp4" type="video/mp4">
+    <!-- Fallback for browsers that don't support video -->
+    <img src="assets/splash.gif" alt="Loading..." class="splash-fallback">
+  </video>
+</div>
