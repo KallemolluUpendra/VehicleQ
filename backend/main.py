@@ -23,18 +23,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Database configuration - Use PostgreSQL in production, SQLite locally
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./vehicles.db")
+# Database configuration - Use PostgreSQL for both production and local development
+# Default local PostgreSQL connection
+DEFAULT_LOCAL_DB = "postgresql://postgres:postgres@localhost:5432/vehicleq"
+DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_LOCAL_DB)
 
 # Render provides DATABASE_URL with postgres:// scheme, but SQLAlchemy needs postgresql://
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Log database being used
-if DATABASE_URL.startswith("postgresql://"):
-    print("🐘 Using PostgreSQL database with image storage")
-else:
-    print("📁 Using SQLite database (local development)")
+print("🐘 Using PostgreSQL database with image storage")
+print(f"   Database: {DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else 'local'}")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -61,26 +61,25 @@ class Vehicle(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# Manual migration: Add image_data column if it doesn't exist (PostgreSQL only)
-if DATABASE_URL.startswith("postgresql://"):
-    try:
-        with engine.connect() as conn:
-            # Check if column exists
-            result = conn.execute(
-                sqlalchemy.text(
-                    "SELECT column_name FROM information_schema.columns "
-                    "WHERE table_name='vehicles' AND column_name='image_data'"
-                )
+# Manual migration: Add image_data column if it doesn't exist
+try:
+    with engine.connect() as conn:
+        # Check if column exists
+        result = conn.execute(
+            sqlalchemy.text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name='vehicles' AND column_name='image_data'"
             )
-            if not result.fetchone():
-                print("Adding image_data column to vehicles table...")
-                conn.execute(sqlalchemy.text("ALTER TABLE vehicles ADD COLUMN image_data BYTEA"))
-                conn.commit()
-                print("✅ Column added successfully")
-            else:
-                print("✅ image_data column already exists")
-    except Exception as e:
-        print(f"Migration check: {e}")
+        )
+        if not result.fetchone():
+            print("Adding image_data column to vehicles table...")
+            conn.execute(sqlalchemy.text("ALTER TABLE vehicles ADD COLUMN image_data BYTEA"))
+            conn.commit()
+            print("✅ Column added successfully")
+        else:
+            print("✅ image_data column already exists")
+except Exception as e:
+    print(f"Migration check: {e}")
 
 # Image optimization settings
 MAX_IMAGE_SIZE = (1920, 1080)  # Max resolution
@@ -245,14 +244,22 @@ def get_all_vehicles_admin():
     """Get all vehicles from all users (admin only)"""
     db = SessionLocal()
     vehicles = db.query(Vehicle).order_by(Vehicle.timestamp.desc()).all()
+    
+    result = []
+    for v in vehicles:
+        user = db.query(User).filter(User.id == v.user_id).first()
+        result.append({
+            "id": v.id,
+            "number": v.number,
+            "owner": v.owner,
+            "timestamp": v.timestamp,
+            "user_id": v.user_id,
+            "username": user.username if user else "Unknown",
+            "user_email": user.email if user else "Unknown"
+        })
+    
     db.close()
-    return [{
-        "id": v.id,
-        "number": v.number,
-        "owner": v.owner,
-        "timestamp": v.timestamp,
-        "user_id": v.user_id
-    } for v in vehicles]
+    return result
 
 @app.delete("/admin/vehicle/{vehicle_id}")
 def admin_delete_vehicle(vehicle_id: int):

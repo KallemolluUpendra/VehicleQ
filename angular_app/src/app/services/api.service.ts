@@ -8,7 +8,9 @@ import { Vehicle } from '../models/vehicle.model';
   providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = 'https://vehicleq-dev.onrender.com';
+  // Use local backend for development, production URL for deployment
+  private baseUrl = 'http://127.0.0.1:8000';
+  // For production, use: 'https://vehicleq-dev.onrender.com'
 
   constructor(private http: HttpClient) { }
 

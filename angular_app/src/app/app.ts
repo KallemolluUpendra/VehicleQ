@@ -20,6 +20,11 @@ export class App implements OnInit, OnDestroy {
   constructor(private router: Router) {}
 
   async ngOnInit() {
+    // Skip Capacitor initialization during SSR
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     // Track current route
     this.routerSubscription = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
